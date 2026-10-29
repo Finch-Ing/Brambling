@@ -1,0 +1,11 @@
+<div class="page-actions">
+  #if(showRefreshAll):
+  <form class="inline" method="post" action="/shows/refresh-all"><button type="submit">Refresh all feeds</button></form>
+  #endif
+  #if(layout.windowClosed):
+  <form class="inline" method="post" action="/queue/process-now" title="Processing window #(layout.windowLabel)">
+    <input type="hidden" name="back" value="#(backPath)">
+    <button type="submit" class="primary" #if(layout.processNowActive):disabled#endif>#if(layout.processNowActive):Processing now…#else:Process now#endif</button>
+  </form>
+  #endif
+</div>

@@ -1,0 +1,36 @@
+# macOS
+.DS_Store
+
+# Swift Package Manager / Xcode
+/.build
+/Packages
+.swiftpm/
+xcuserdata/
+DerivedData/
+*.xcodeproj
+*.xcworkspace
+!*.xcworkspace/contents.xcworkspacedata
+.netrc
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# Environment / secrets (keep the examples)
+.env
+.env.*
+!.env.example
+*.env
+!*.env.example
+
+# Local runtime data (SQLite DB, processed media, artwork, temp files)
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+db.sqlite
+/data/
+/var/
+
+# Logs
+*.log

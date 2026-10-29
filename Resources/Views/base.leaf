@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>#(pageTitle) · Brambling</title>
+  <script>
+    // A manual theme choice lasts for this tab (sessionStorage); a new tab follows the system again.
+    // Applied before the first paint, so pages don't flash in the wrong mode.
+    try { const t = sessionStorage.getItem("theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}
+  </script>
+  <link rel="stylesheet" href="/app.css">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <script src="/htmx.min.js" defer></script>
+</head>
+<body>
+  <header>
+    <div class="bar">
+      <a class="logo" href="/" tabindex="-1" aria-hidden="true"><img src="/logo.png" alt="" width="40" height="40"></a>
+      <!-- One baseline for the name and the links, so different font sizes still line up. -->
+      <div class="header-row">
+        <a class="brand" href="/">Brambling</a>
+        <nav>
+          <a href="/">Shows</a>
+          <a href="/shows/new">Add show</a>
+          <a href="/settings">Settings</a>
+        </nav>
+      </div>
+      <button type="button" class="theme-toggle" id="theme-toggle" role="switch" aria-checked="false" aria-label="Dark mode" title="Toggle light / dark">
+        <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+    </div>
+  </header>
+  #if(layout.diskBlockedReason):
+  <div class="banner warn"><div class="bar">Disk guard: downloads and processing are paused — #(layout.diskBlockedReason)</div></div>
+  #endif
+  #if(notice):<div class="banner ok"><div class="bar">#(notice)</div></div>#endif
+  #if(error):<div class="banner err"><div class="bar">#(error)</div></div>#endif
+  <main>
+    #import("content")
+  </main>
+  #extend("footer")
+  <script>
+    (() => {
+      // Two-way switch: follows the system until flipped; the choice lasts for this tab.
+      const button = document.getElementById("theme-toggle");
+      const system = window.matchMedia("(prefers-color-scheme: dark)");
+      const isDark = () => (document.documentElement.dataset.theme || (system.matches ? "dark" : "light")) === "dark";
+      const show = () => button.setAttribute("aria-checked", String(isDark()));
+      button.addEventListener("click", () => {
+        const next = isDark() ? "light" : "dark";
+        document.documentElement.dataset.theme = next;
+        try { sessionStorage.setItem("theme", next); } catch (e) {}
+        show();
+      });
+      system.addEventListener("change", show);
+      show();
+    })();
+    function copyURL(button) {
+      const url = button.dataset.url, label = button.textContent;
+      const done = () => { button.textContent = "Copied"; setTimeout(() => button.textContent = label, 1500); };
+      // Plain HTTP on the LAN isn't a secure context, so the Clipboard API is missing there:
+      // copy through a hidden text field instead, and only ask the user if that fails too.
+      const fallback = () => {
+        const field = document.createElement("textarea");
+        field.value = url;
+        field.setAttribute("readonly", "");
+        field.style.position = "fixed";
+        field.style.opacity = "0";
+        document.body.appendChild(field);
+        field.select();
+        let copied = false;
+        try { copied = document.execCommand("copy"); } catch (e) {}
+        field.remove();
+        if (copied) { done(); } else { prompt("Copy this URL:", url); }
+      };
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(url).then(done, fallback);
+      } else {
+        fallback();
+      }
+    }
+  </script>
+</body>
+</html>

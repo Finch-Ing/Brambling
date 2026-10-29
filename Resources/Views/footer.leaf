@@ -1,0 +1,7 @@
+<footer id="status-footer" hx-get="/status/footer" hx-trigger="every 10s" hx-swap="outerHTML">
+  <div class="bar">
+    <span class="dot #(layout.footer.stateClass)"></span>
+    <span class="footer-state">#(layout.footer.state)</span>
+    <span class="footer-disk">#(layout.footer.disk)</span>
+  </div>
+</footer>

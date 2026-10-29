@@ -1,0 +1,57 @@
+#extend("base"):
+#export("content"):
+<h1>Add show</h1>
+<form class="card" method="post" action="/shows/preview">
+  <label for="sourceURL" class="muted">Feed URL (private feeds with tokens are fine — the URL stays on the server)</label>
+  <div class="feed-url">
+    <input id="sourceURL" name="sourceURL" type="url" required placeholder="https://…" value="#(sourceURLInput)" autocomplete="off">
+    <button class="primary" type="submit">Preview</button>
+  </div>
+</form>
+
+#if(preview.id):
+<h2>Preview</h2>
+<div class="card">
+  <div class="detail-head">
+    #if(preview.artworkURL):<img class="art large" src="#(preview.artworkURL)" alt="" referrerpolicy="no-referrer">#endif
+    <div>
+      <div class="title">#(preview.title)</div>
+      #if(preview.author):<div class="muted">#(preview.author)</div>#endif
+      <div class="small muted">#(preview.episodeCount) episodes in the feed · #(preview.maskedURL)</div>
+      <ul class="small">
+        #for(item in preview.latest):<li>#(item.title) <span class="muted">· #(item.date) · #(item.duration)</span></li>#endfor
+      </ul>
+    </div>
+  </div>
+
+  <form method="post" action="/shows">
+    <input type="hidden" name="previewID" value="#(preview.id)">
+    <div class="form-grid">
+      <label for="slug">Feed name (slug)</label>
+      <div><input id="slug" name="slug" type="text" value="#(preview.suggestedSlug)" pattern="[a-z0-9]+(-[a-z0-9]+)*" required>
+        <div class="hint">Becomes https://…/feeds/<em>slug</em>.xml and can't be changed later.</div></div>
+      <label for="titleOverride">Title override</label>
+      <input id="titleOverride" name="titleOverride" type="text" class="wide" placeholder="#(preview.title)">
+      <label for="speed">Speed</label>
+      <div>
+        <input type="range" min="1" max="3" step="0.05" value="1" oninput="speed.value = Number(this.value).toFixed(2)">
+        <input id="speed" name="speed" type="number" min="1" max="3" step="0.05" value="1.00" style="width: 90px">×
+      </div>
+      <label>Processing</label>
+      <div>
+        <label><input type="checkbox" name="smartSpeed" checked> Trim silence</label><br>
+        <label><input type="checkbox" name="voiceBoost" checked> Voice equalization</label>
+      </div>
+      <label>Episodes</label>
+      <div class="mode-choice">
+        <label><input type="radio" name="mode" value="newest" checked>
+          Newest <input name="keepCount" type="number" min="1" max="200" value="10" style="width: 70px"> episodes</label>
+        <label><input type="radio" name="mode" value="manual"> Manual selection <span class="hint">(choose episodes after adding)</span></label>
+      </div>
+    </div>
+    <div class="actions"><button class="primary" type="submit">Add show</button></div>
+  </form>
+</div>
+#endif
+#endexport
+#endextend

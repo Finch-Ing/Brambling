@@ -1,0 +1,98 @@
+<div id="choose">
+  <p class="muted small">#(chooser.totalCount) episodes in the source feed · #(chooser.keptCount) selected. Only selected episodes are processed and appear in Brambling's feed.</p>
+
+  <div class="card archive-tools">
+    #if(chooser.hasNumbers):
+    <form method="post" action="/shows/#(show.id)/archive/range" class="range-form">
+      <span class="muted">Episodes</span>
+      &#35;<input name="from" type="number" min="0" required style="width: 90px" placeholder="300">
+      to &#35;<input name="to" type="number" min="0" required style="width: 90px" placeholder="310">
+      #if(chooser.hasSeasons):<span class="muted">season</span> <input name="season" type="number" min="0" style="width: 70px" placeholder="any">#endif
+      <button type="submit" name="action" value="keep">Select</button>
+      <button type="submit" name="action" value="unkeep">Deselect</button>
+    </form>
+    #endif
+    #if(chooser.availableCount > 0):
+    <form method="post" action="/shows/#(show.id)/archive/all" onsubmit="return confirm('Download and process all #(chooser.availableCount) remaining episodes (about #(chooser.availableSize))?');">
+      <button type="submit" name="action" value="keep">Select all #(chooser.availableCount) remaining episodes (about #(chooser.availableSize))</button>
+    </form>
+    #endif
+  </div>
+
+  <form method="post" action="/shows/#(show.id)/archive" id="archive-form">
+    <input type="hidden" name="action" value="save">
+    <div class="archive-bar">
+      <input type="search" id="archive-search" placeholder="Search title or number…" autocomplete="off">
+      <span class="small muted" id="selection-count">#(chooser.keptCount) selected</span>
+      <button type="submit" class="primary" id="save-selection" disabled>Save selection</button>
+    </div>
+    <p class="hint">Checked episodes are selected. Change the checkboxes, then save. Tip: click one, then shift-click another to change everything in between.</p>
+    <table>
+      <thead><tr>
+        <th style="width: 32px"><input type="checkbox" id="select-visible" title="Check / uncheck all visible"></th>
+        <th class="num">#</th><th>Episode</th><th>Status</th><th class="num">Length</th>
+      </tr></thead>
+      <tbody>
+      #for(episode in chooser.episodes):
+        <tr data-search="#(episode.searchText)">
+          <td><input type="checkbox" name="episodes[]" value="#(episode.id)" class="pick" #if(episode.kept):checked data-was-selected="1"#endif #if(episode.downloaded):data-downloaded="1"#endif></td>
+          <td class="num muted">#(episode.numberLabel)</td>
+          <td><div class="ep-title">#(episode.title)</div>
+          #if(episode.subtitle):<div class="ep-sub">#(episode.subtitle)</div>#endif
+          #if(episode.excerpt):<div class="ep-desc">#(episode.excerpt)</div>#endif
+          <div class="small muted">#(episode.date)</div></td>
+          <td><span class="chip #(episode.statusClass)">#(episode.statusLabel)</span></td>
+          <td class="num">#(episode.duration)</td>
+        </tr>
+      #endfor
+      </tbody>
+    </table>
+  </form>
+</div>
+
+<script>
+  (() => {
+    const boxes = () => Array.from(document.querySelectorAll("input.pick"));
+    const visible = () => boxes().filter(b => b.closest("tr").style.display !== "none");
+    const count = document.getElementById("selection-count");
+    const save = document.getElementById("save-selection");
+    const changed = () => boxes().some(b => b.checked !== (b.dataset.wasSelected === "1"));
+    const update = () => {
+      count.textContent = boxes().filter(b => b.checked).length + " selected" + (changed() ? " (unsaved)" : "");
+      save.disabled = !changed();
+    };
+    let last = null;
+    document.querySelector("#archive-form tbody").addEventListener("click", (event) => {
+      const box = event.target.closest("input.pick");
+      if (!box) return;
+      if (event.shiftKey && last) {
+        const list = visible(), a = list.indexOf(last), b = list.indexOf(box);
+        if (a >= 0 && b >= 0) list.slice(Math.min(a, b), Math.max(a, b) + 1).forEach(x => x.checked = box.checked);
+      }
+      last = box;
+      update();
+    });
+    document.getElementById("select-visible").addEventListener("change", (event) => {
+      visible().forEach(b => b.checked = event.target.checked);
+      update();
+    });
+    // Deselecting downloaded episodes deletes their files: say how many before saving.
+    let submitting = false;
+    document.getElementById("archive-form").addEventListener("submit", (event) => {
+      const removed = boxes().filter(b => !b.checked && b.dataset.wasSelected === "1" && b.dataset.downloaded === "1").length;
+      if (removed > 0 && !confirm(removed + " downloaded episode(s) will be removed from the feed and deleted. Save the selection?")) {
+        event.preventDefault();
+        return;
+      }
+      submitting = true;
+    });
+    // Unsaved checkbox changes: warn before leaving the page.
+    window.addEventListener("beforeunload", (event) => { if (changed() && !submitting) event.preventDefault(); });
+    document.getElementById("archive-search").addEventListener("input", (event) => {
+      const q = event.target.value.trim().toLowerCase();
+      document.querySelectorAll("#archive-form tbody tr").forEach(row => {
+        row.style.display = !q || row.dataset.search.includes(q) ? "" : "none";
+      });
+    });
+  })();
+</script>

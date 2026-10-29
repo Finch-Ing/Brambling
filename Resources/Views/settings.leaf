@@ -1,0 +1,88 @@
+#extend("base"):
+#export("content"):
+<h1>Settings</h1>
+<h2>Processing time</h2>
+<div class="card">
+  <dl class="facts">
+    <dt>Local time</dt><dd><span id="server-clock" data-now="#(window.nowMillis)" data-tz="#(window.timeZone)">#(window.localTime)</span> <span class="hint">(#(window.timeZone))</span></dd>
+    <dt>Processing</dt><dd>#(window.label) · #(window.state)</dd>
+  </dl>
+  <form method="post" action="/settings/window" class="window-form">
+    <label><input type="radio" name="mode" value="any" #if(!window.configured):checked#endif> Any time</label>
+    <label><input type="radio" name="mode" value="window" #if(window.configured):checked#endif> Only between</label>
+    <div class="times">
+      <input type="time" name="start" value="#(window.start)" aria-label="Start time" required>
+      <span>and</span>
+      <input type="time" name="end" value="#(window.end)" aria-label="End time" required>
+      <span class="hint">may cross midnight, e.g. 23:00 to 06:00</span>
+    </div>
+    <div><button type="submit" class="primary">Save</button></div>
+  </form>
+  <p class="hint">Feeds are refreshed and new episodes downloaded at any time; only the ffmpeg conversions wait for the window.</p>
+  #if(window.configured):
+  <form method="post" action="/queue/process-now">
+    <button type="submit" #if(queue.processNowOverride):disabled#endif>#if(queue.processNowOverride):Processing now…#else:Process now (ignore window until the queue is empty)#endif</button>
+  </form>
+  #endif
+</div>
+<script>
+  (function () {
+    const clock = document.getElementById("server-clock");
+    const form = document.querySelector(".window-form");
+    const times = form.querySelectorAll("input[type=time]");
+    const sync = () => {
+      const any = form.querySelector("input[value=any]").checked;
+      times.forEach((input) => { input.disabled = any; });
+    };
+    form.addEventListener("change", sync);
+    sync();
+    // Keep the server's clock ticking in its own time zone.
+    let format;
+    try {
+      format = new Intl.DateTimeFormat("en-GB", {
+        timeZone: clock.dataset.tz, weekday: "short", day: "numeric", month: "short",
+        hour: "2-digit", minute: "2-digit", hourCycle: "h23",
+      });
+    } catch (e) { return; }
+    const offset = Number(clock.dataset.now) - Date.now();
+    const tick = () => { clock.textContent = format.format(new Date(Date.now() + offset)); };
+    setInterval(tick, 10000);
+  })();
+</script>
+
+<h2>Processing</h2>
+<p class="hint">These come from the environment in <code>docker-compose.yml</code>; change them there and run <code>docker compose up -d</code>.</p>
+<div class="card">
+  <dl class="facts">
+    <dt>Queue</dt><dd>#(queue.summary)</dd>
+    <dt>Refresh interval</dt><dd>every #(refreshMinutes) min</dd>
+    <dt>Concurrency</dt><dd>#(downloadConcurrency) downloads, #(ffmpegConcurrency) ffmpeg job(s)</dd>
+    <dt>ffmpeg</dt><dd>#(ffmpegVersion)</dd>
+    <dt>Public base URL</dt><dd><code>#(publicBaseURL)</code></dd>
+  </dl>
+</div>
+
+<h2>Disk</h2>
+<div class="card">
+  <dl class="facts">
+    <dt>Free</dt><dd>#(disk.free)</dd>
+    <dt>Media</dt><dd>#(disk.media)</dd>
+    <dt>Temporary files</dt><dd>#(disk.tmp)</dd>
+    <dt>Minimum free</dt><dd>#(disk.minFree)</dd>
+    <dt>Media cap</dt><dd>#(disk.maxMedia)</dd>
+  </dl>
+</div>
+
+#if(hasShows):
+<h2>Disk usage per show</h2>
+<table>
+  <thead><tr><th>Show</th><th class="num">Episodes</th><th class="num">Size</th></tr></thead>
+  <tbody>
+  #for(row in perShow):
+    <tr><td><a href="/shows/#(row.id)">#(row.title)</a></td><td class="num">#(row.readyCount)</td><td class="num">#(row.size)</td></tr>
+  #endfor
+  </tbody>
+</table>
+#endif
+#endexport
+#endextend

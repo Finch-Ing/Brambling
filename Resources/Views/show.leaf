@@ -1,0 +1,87 @@
+#extend("base"):
+#export("content"):
+<div class="detail-head">
+  #if(show.hasArtwork):<img class="art large" src="/art/#(show.slug).jpg" alt="">#endif
+  <div style="flex: 1; min-width: 0">
+    <h1>#(show.title)</h1>
+    #extend("chips")
+    <div class="small muted">Refreshed #(show.lastRefresh) · #(show.diskUsage)</div>
+    #if(show.lastError):<div class="error-text">#(show.lastError)</div>#endif
+    <div class="card-actions">
+      #extend("copybuttons")
+    </div>
+  </div>
+</div>
+
+<div class="actions">
+  <form class="inline" method="post" action="/shows/#(show.id)/refresh"><button type="submit">Refresh feed now</button></form>
+  #if(outdatedCount > 0):
+  <form class="inline" method="post" action="/shows/#(show.id)/reprocess"><button type="submit">Reprocess #(outdatedCount) episode(s) with current settings</button></form>
+  #endif
+  #extend("status")
+</div>
+
+<h2>Settings</h2>
+<form class="card" method="post" action="/shows/#(show.id)">
+  <div class="form-grid">
+    <label for="titleOverride">Title override</label>
+    <input id="titleOverride" name="titleOverride" type="text" class="wide" value="#(show.titleOverride)" placeholder="#(show.sourceTitle)">
+    <label for="speed">Speed</label>
+    <div>
+      <input type="range" min="1" max="3" step="0.05" value="#(show.speedValue)" oninput="speed.value = Number(this.value).toFixed(2)">
+      <input id="speed" name="speed" type="number" min="1" max="3" step="0.05" value="#(show.speedValue)" style="width: 90px">×
+    </div>
+    <label>Processing</label>
+    <div>
+      <label><input type="checkbox" name="smartSpeed" #if(show.smartSpeed):checked#endif> Trim silence</label><br>
+      <label><input type="checkbox" name="voiceBoost" #if(show.voiceBoost):checked#endif> Voice equalization</label>
+    </div>
+    <label>Episodes</label>
+    <div class="mode-choice">
+      <label><input type="radio" name="mode" value="newest" #if(!show.manual):checked#endif>
+        Newest <input name="keepCount" type="number" min="1" max="200" value="#(show.newestCount)" style="width: 70px"> episodes</label>
+      <label><input type="radio" name="mode" value="manual" #if(show.manual):checked#endif> Manual selection</label>
+    </div>
+    <label>Order</label>
+    <div class="mode-choice">
+      <label><input type="radio" name="order" value="newest" #if(!show.seriesOrder):checked#endif> Newest first</label>
+      <label><input type="radio" name="order" value="series" #if(show.seriesOrder):checked#endif> Oldest first <span class="hint">(series — on the iPod the first episode is on top)</span></label>
+    </div>
+    <label for="enabled">Enabled</label>
+    <div><input id="enabled" type="checkbox" name="enabled" #if(show.enabled):checked#endif></div>
+  </div>
+  <p class="hint">Changes apply to episodes processed from now on. Existing episodes keep their files until you reprocess them.</p>
+  <button class="primary" type="submit">Save settings</button>
+</form>
+
+#if(show.manual):
+<h2>Selected episodes</h2>
+#extend("episodes")
+<h2>Choose episodes</h2>
+#extend("chooser")
+#else:
+<h2>Episodes</h2>
+#extend("episodes")
+#endif
+
+<h2>Feed source</h2>
+<div class="card">
+  <div class="small"><span class="muted">Source URL:</span> <code>#(show.maskedSourceURL)</code></div>
+  <details style="margin-top: 10px">
+    <summary>Replace feed URL</summary>
+    <form method="post" action="/shows/#(show.id)/source" style="margin-top: 10px">
+      <div class="feed-url">
+        <input name="sourceURL" type="url" required placeholder="https://…" autocomplete="off">
+        <button type="submit">Replace</button>
+      </div>
+      <p class="hint">The new URL is checked before it replaces the old one.</p>
+    </form>
+  </details>
+</div>
+
+<h2>Danger zone</h2>
+<form method="post" action="/shows/#(show.id)/delete" onsubmit="return confirm('Delete this show, all its processed episodes and its feed?');">
+  <button class="danger" type="submit">Delete show</button>
+</form>
+#endexport
+#endextend
