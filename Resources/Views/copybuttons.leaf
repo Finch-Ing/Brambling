@@ -1,0 +1,8 @@
+<div class="copy-buttons">
+  #if(show.plainFeedURL):
+  <button type="button" data-url="#(show.feedURL)" onclick="copyURL(this)">Copy HTTPS</button>
+  <button type="button" data-url="#(show.plainFeedURL)" onclick="copyURL(this)" title="For podcast apps that don't accept the HTTPS certificate">Copy HTTP</button>
+  #else:
+  <button type="button" data-url="#(show.feedURL)" onclick="copyURL(this)">Copy feed URL</button>
+  #endif
+</div>

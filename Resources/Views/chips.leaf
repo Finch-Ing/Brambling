@@ -1,0 +1,8 @@
+<div class="chips">
+  <span class="chip">#(show.speedLabel)</span>
+  #if(show.smartSpeed):<span class="chip">Trim silence</span>#endif
+  #if(show.voiceBoost):<span class="chip">Voice EQ</span>#endif
+  #if(show.manual):<span class="chip">Manual selection</span>#else:<span class="chip">Newest #(show.keepCount)</span>#endif
+  #if(show.seriesOrder):<span class="chip">Oldest first</span>#endif
+  #if(!show.enabled):<span class="chip warn">Disabled</span>#endif
+</div>

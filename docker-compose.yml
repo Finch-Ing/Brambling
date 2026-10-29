@@ -1,0 +1,38 @@
+services:
+  brambling:
+    # Built from the sources in this folder: docker compose up -d --build
+    build: .
+    image: brambling:local
+    container_name: brambling
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/data
+    environment:
+      # Your timezone; the processing window below uses local time.
+      TZ: Europe/Berlin
+      # Owner of the files in ./data (run `id` on the host to see yours).
+      PUID: "1000"
+      PGID: "1000"
+
+      # Fallback for links in feeds; normally they follow the address the client used.
+      # Set it to how your Mac reaches this machine, e.g. http://192.168.1.50:8080
+      BRAMBLING_PUBLIC_BASE_URL: http://localhost:8080
+
+      BRAMBLING_REFRESH_MINUTES: "30"
+      BRAMBLING_DOWNLOAD_CONCURRENCY: "2"
+      # Parallel ffmpeg jobs; each mostly uses one CPU core.
+      BRAMBLING_FFMPEG_CONCURRENCY: "1"
+
+      # Pause downloads/processing below this much free disk space (GB).
+      BRAMBLING_MIN_FREE_GB: "5"
+      # Optional cap for media + temp files (GB). Empty = no cap.
+      BRAMBLING_MAX_MEDIA_GB: ""
+      # Only run ffmpeg in this local-time window, e.g. 01:00-06:00. Empty = any time.
+      # Can also be changed in the web UI (Settings → Processing time), which then wins.
+      BRAMBLING_PROCESS_WINDOW: ""
+
+      # Optional password for the web UI and API. Feeds and media stay open for podcast apps.
+      BRAMBLING_USER: ""
+      BRAMBLING_PASS: ""

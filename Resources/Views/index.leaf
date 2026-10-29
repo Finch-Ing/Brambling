@@ -1,0 +1,39 @@
+#extend("base"):
+#export("content"):
+<div class="page-head">
+  <h1>Shows</h1>
+  #extend("status")
+</div>
+#if(hasShows):
+<div class="shows">
+  #for(show in shows):
+  <div class="card show-row">
+    #if(show.hasArtwork):<img class="art" src="/art/#(show.slug).jpg" alt="">#else:<div class="art"></div>#endif
+    <div>
+      <a class="title" href="/shows/#(show.id)">#(show.title)</a>
+      #extend("chips")
+      <div class="small muted">Refreshed #(show.lastRefresh) · #(show.diskUsage)</div>
+      #if(show.lastError):<div class="error-text">#(show.lastError)</div>#endif
+      <div class="card-actions">
+        #extend("copybuttons")
+      </div>
+    </div>
+    <div class="counts">
+      <div>#(show.readyCount) ready</div>
+      #if(show.workingCount > 0):<div>#(show.workingCount) in progress</div>#endif
+      #if(show.failedCount > 0):<div class="error-text">#(show.failedCount) failed</div>#endif
+    </div>
+  </div>
+  #endfor
+</div>
+<a class="add-show" href="/shows/new" title="Add show" aria-label="Add show">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+</a>
+#else:
+<div class="card">
+  <p>No shows yet.</p>
+  <p><a class="button" href="/shows/new">Add your first show</a></p>
+</div>
+#endif
+#endexport
+#endextend

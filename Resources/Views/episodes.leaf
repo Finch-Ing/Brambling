@@ -1,0 +1,28 @@
+<div id="episodes" hx-get="/shows/#(showID)/episodes" hx-trigger="every 5s" hx-swap="outerHTML">
+#if(hasEpisodes):
+<table>
+  <thead><tr><th>Episode</th><th>Status</th><th class="num">Length</th><th class="num">Size</th></tr></thead>
+  <tbody>
+  #for(episode in episodes):
+    <tr>
+      <td><div class="ep-title">#(episode.title)</div>
+        #if(episode.subtitle):<div class="ep-sub">#(episode.subtitle)</div>#endif
+        #if(episode.excerpt):<div class="ep-desc">#(episode.excerpt)</div>#endif
+        <div class="small muted">#(episode.date)</div>
+        #if(episode.error):<div class="error-text">#(episode.error)</div>#endif
+      </td>
+      <td><span class="chip #(episode.statusClass)">#(episode.statusLabel)</span>
+        #if(episode.canRetry):
+        <form class="inline" method="post" action="/episodes/#(episode.id)/retry"><button type="submit" class="small">Retry</button></form>
+        #endif
+      </td>
+      <td class="num">#(episode.duration)</td>
+      <td class="num">#(episode.size)</td>
+    </tr>
+  #endfor
+  </tbody>
+</table>
+#else:
+<div class="card muted">No episodes yet.#if(manual): Choose episodes below.#endif</div>
+#endif
+</div>

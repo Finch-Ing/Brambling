@@ -1,0 +1,9 @@
+.git
+.build
+.swiftpm
+data
+*.md
+*.png
+!Public/*.png
+.DS_Store
+docker-compose.yml
